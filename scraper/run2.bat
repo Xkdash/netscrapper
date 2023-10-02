@@ -1,1 +1,0 @@
-jupyter-lab --notebook-dir="D:\Work\Git\netscrapper\scraper"

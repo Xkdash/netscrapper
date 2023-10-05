@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>Dashboard - SOC-Central</title>
+        <title>IOC Search - SOC-Central</title>
         <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
         <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
         <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
@@ -100,8 +100,11 @@
                                         <br>
                                         <h5 class="mt-4" > {{source}} </h6>
                                         <h6 class="mt-4" > {{ioc}} </h6>
+                                        {%if sandbox !=""%}
+                                        <h6 class="mt-4" > <a href="{{sandbox}}" target="_blank" rel="noopener noreferrer"> Run in Proofpoint Sandbox </a> </h6>
+                                        {%endif%}
                                         <h6 class="mt-4" > {{itag}} </h6>
-                                        {%for i in range(0,i_n)%}
+                                        {%for i in range(0,info|length)%}
                                         {%if 'https://' in info[i]%}
                                             {%set link= info[i].split("https://")%}
                                             <h6 class="mt-4"> &emsp;{{link[0]}}<a href="https://{{link[1]}}">https://{{link[1]}}</a></h6>
@@ -110,10 +113,10 @@
                                         {%endif%}
                                         {%endfor%}
                                         <h6 class="mt-4" > {{vtag}} </h6>
-                                        {%for i in range(0,v_n)%}
+                                        {%for i in range(0,verdict|length)%}
                                         {%if 'https://' in verdict[i]%}
                                             {%set link= verdict[i].split("https://")%}
-                                            <h6 class="mt-4 {{col}}"> &emsp;{{link[0]}}<a href="https://{{link[1]}}">https://{{link[1]}}</a></h6>
+                                            <h6 class="mt-4 {{col}}"> &emsp;{{link[0]}}<a href="https://{{link[1]}}" target="_blank" rel="noopener noreferrer">https://{{link[1]}}</a></h6>
                                             {%else%}
                                         <h6 class="mt-4 {{col}}"> &emsp;{{verdict[i]}}</h6>
                                         {%endif%}

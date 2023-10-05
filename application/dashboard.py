@@ -15,6 +15,7 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 import html5lib
 from datetime import datetime as dt
+import urllib.parse
 
 dash_bp=Blueprint('dash_bp', __name__,template_folder='templates',static_folder='static')
 @dash_bp.route("/",methods=['GET', 'POST'])
@@ -285,7 +286,7 @@ def ioc_search():
 		text=request.form.get("ioc_in","").strip()
 		print(text)
 		if text=="":
-			return render_template("ioc.html",ioc="",info=[],verdict=[],source="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
+			return render_template("ioc.html",ioc="",info=[],verdict=[],source="", sandbox="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
 		elif "."in text:
 			valid=False
 			try:
@@ -310,10 +311,15 @@ def ioc_search():
 					return render_template("ioc.html", ioc="IP: "+text,info=info,verdict=verdict,source="AbuseIP DB",v_n=len(verdict),i_n=len(info),itag="Info: ",vtag="Verdict: ",col=col)
 
 			else:
+				if text[:4] !="http":
+					text="https://"+text
+				print(text)
+				sandbox=""
 				valid=validators.url(text)
 				if valid==True:
 					warnings.filterwarnings('ignore')
 					print("URL")
+					sandbox="https://saasisolation.com/browser?traceToken=dash-create-url&url="+urllib.parse.quote(text,safe='')
 					url=text
 					vt_res = VT_URLsubmit(url)
 					urlscan_res = URLSCANIO_submit(url)
@@ -323,10 +329,10 @@ def ioc_search():
 					ver, brand, info = URLSCAN_verdict(uresults)
 					print(info)
 					verdict=["VirusTotal Score: "+str(score),"VirusTotal verdict: "+verdict,"VirusTotal Link: "+vtlink,"URLScan.io Verdict: "+ver,"URLScan.io Brand: "+brand]
-					return render_template("ioc.html",ioc="URL: "+ defangURL(url),source="VirusTotal/URLScan.IO",verdict=verdict,v_n=len(verdict),itag="Info: ", i_n=len(info), vtag="Verdict: ", info=info,col=col)
+					return render_template("ioc.html",ioc="URL: "+ defangURL(url),sandbox=sandbox,source="VirusTotal/URLScan.IO",verdict=verdict,itag="Info: ", vtag="Verdict: ", info=info,col=col)
 				else:
 				    print("Invalid IP/URL")
-				    return render_template("ioc.html",ioc="Invalid IP/URL",info=[],verdict=[],source="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
+				    return render_template("ioc.html",ioc="Invalid IP/URL", sandbox="", info=[],verdict=[],source="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
 
 		elif len(text) in [32,40, 64, 128]:
 		    valid=False
@@ -341,8 +347,8 @@ def ioc_search():
 		        return render_template("ioc.html",ioc="Hash: "+text,verdict=verdict, col=col,source="VirusTotal",v_n=len(verdict),itag="Info: ", i_n=len(info), vtag="Verdict: ", info=info)
 		else:
 			print("Invalid Input")
-			return render_template("ioc.html",ioc="Invalid Input",info=[],verdict=[],source="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
-	return render_template("ioc.html",ioc="",info=[],verdict=[],source="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
+			return render_template("ioc.html",ioc="Invalid Input",info=[],verdict=[],source="", sandbox="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
+	return render_template("ioc.html",ioc="",info=[],verdict=[],source="", sandbox="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
 
 @dash_bp.route("/cve_hub",methods=['GET', 'POST'])
 def cve_hub():

@@ -17,7 +17,7 @@
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
             <!-- Navbar Brand-->
             <button class="btn btn-link btn-lg order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
-            <a class="navbar-brand ps-3" href="index.html">SOC-Central</a>
+            <a class="navbar-brand ps-3" href="{{url_for('dash_bp.dash_index')}}">SOC-Central</a>
             <!-- Sidebar Toggle-->
             
             <!-- Navbar Search-->
@@ -101,13 +101,19 @@
                                         <h5 class="mt-4" > {{source}} </h6>
                                         <h6 class="mt-4" > {{ioc}} </h6>
                                         {%if sandbox !=""%}
-                                        <h6 class="mt-4" > <a href="{{sandbox}}" target="_blank" rel="noopener noreferrer"> Run in Proofpoint Sandbox </a> </h6>
+                                        <h6 class="mt-4" > <a href="{{sandbox}}" target="_blank" rel="noopener noreferrer"> {{sand_text}} </a> </h6>
                                         {%endif%}
                                         <h6 class="mt-4" > {{itag}} </h6>
                                         {%for i in range(0,info|length)%}
                                         {%if 'https://' in info[i]%}
                                             {%set link= info[i].split("https://")%}
                                             <h6 class="mt-4"> &emsp;{{link[0]}}<a href="https://{{link[1]}}">https://{{link[1]}}</a></h6>
+                                            {%elif "Domain:" in info[i] %}
+                                            {% set dom= info[i].split(" ")%}
+                                            <h6 class="mt-4"> &emsp;{{info[i]}} | <a href="https://www.whois.com/whois/{{dom[1]}}" target="_blank" rel="noopener noreferrer">View Full Domain Info</a></h6>
+                                            {%elif "IP:" in info[i] %}
+                                            {% set dom= info[i].split(" ")%}
+                                            <h6 class="mt-4"> &emsp;{{info[i]}} | <a href="https://www.abuseipdb.com/check/{{dom[1]}}" target="_blank" rel="noopener noreferrer">View Full IP Info</a></h6>
                                             {%else%}
                                         <h6 class="mt-4"> &emsp;{{info[i]}}</h6>
                                         {%endif%}

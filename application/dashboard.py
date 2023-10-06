@@ -286,9 +286,11 @@ def ioc_search():
 		text=request.form.get("ioc_in","").strip()
 		print(text)
 		if text=="":
-			return render_template("ioc.html",ioc="",info=[],verdict=[],source="", sandbox="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
+			return render_template("ioc.html",ioc="",info=[],verdict=[],source="", sandbox="",itag="",vtag="",col="text-dark")
 		elif "."in text:
 			valid=False
+			if "[.]" in text:
+				text=text.replace("[.]",".")
 			try:
 				ipaddress.IPv4Network(text)
 				valid=True
@@ -298,7 +300,7 @@ def ioc_search():
 				print("IP4 address")
 				if ipaddress.ip_address(text).is_private:
 					print("Private IP, Can't Check Reputation.")
-					return render_template("ioc.html",ioc="",info=[],verdict=[],source="Private IP, Can't Check Reputation",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
+					return render_template("ioc.html",ioc="",info=[],sandbox="",verdict=[],source="Private IP, Can't Check Reputation",itag="",vtag="",col="text-dark")
 				else: # valid IP
 					data=AbuseIPDB_ReportsLookup(text)
 					info=["ISP: "+str(data['isp']),"Country: "+ str(data['countryCode']),"Domain: "+str(data['domain'])]
@@ -307,13 +309,22 @@ def ioc_search():
 						col="text-danger"
 					else:
 						col="text-dark"
-					print(data)
-					return render_template("ioc.html", ioc="IP: "+text,info=info,verdict=verdict,source="AbuseIP DB",v_n=len(verdict),i_n=len(info),itag="Info: ",vtag="Verdict: ",col=col)
+					return render_template("ioc.html", ioc="IP: "+text,info=info,sandbox="https://www.abuseipdb.com/check/"+text,sand_text="View in AbuseIPDB",verdict=verdict,source="AbuseIP DB",itag="Info: ",vtag="Verdict: ",col=col)
 
 			else:
 				if text[:4] !="http":
 					text="https://"+text
-				print(text)
+
+				if "[:]" in  text:
+					text=text.replace("[:]",":")
+
+				if "__;" in text:
+					text=text.split("__;")[0]
+				if "https://urldefense.com/v3/__https:/" in text:
+					text="https://"+text[35:]
+				if "https://urldefense.com/v3/__http:/" in text:
+					text="https://"+text[34:]
+
 				sandbox=""
 				valid=validators.url(text)
 				if valid==True:
@@ -327,12 +338,11 @@ def ioc_search():
 					score, verdict,vtlink,col = VT_URLfetch(vt_res)
 					uresults=URLSCAN_fetch(urlscan_res)
 					ver, brand, info = URLSCAN_verdict(uresults)
-					print(info)
 					verdict=["VirusTotal Score: "+str(score),"VirusTotal verdict: "+verdict,"VirusTotal Link: "+vtlink,"URLScan.io Verdict: "+ver,"URLScan.io Brand: "+brand]
-					return render_template("ioc.html",ioc="URL: "+ defangURL(url),sandbox=sandbox,source="VirusTotal/URLScan.IO",verdict=verdict,itag="Info: ", vtag="Verdict: ", info=info,col=col)
+					return render_template("ioc.html",ioc="URL: "+ defangURL(url),sandbox=sandbox,sand_text="Run in Proofpoint Sandbox",source="VirusTotal/URLScan.IO",verdict=verdict,itag="Info: ", vtag="Verdict: ", info=info,col=col)
 				else:
 				    print("Invalid IP/URL")
-				    return render_template("ioc.html",ioc="Invalid IP/URL", sandbox="", info=[],verdict=[],source="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
+				    return render_template("ioc.html",ioc="Invalid IP/URL", sandbox="", info=[],verdict=[],source="",itag="",vtag="",col="text-dark")
 
 		elif len(text) in [32,40, 64, 128]:
 		    valid=False
@@ -344,10 +354,10 @@ def ioc_search():
 		    if valid==True: #hash
 		        verdict,col,info=VT_hash(text)
 		        print(verdict)
-		        return render_template("ioc.html",ioc="Hash: "+text,verdict=verdict, col=col,source="VirusTotal",v_n=len(verdict),itag="Info: ", i_n=len(info), vtag="Verdict: ", info=info)
+		        return render_template("ioc.html",ioc="Hash: "+text,verdict=verdict, col=col,source="VirusTotal",itag="Info: ", vtag="Verdict: ", info=info)
 		else:
 			print("Invalid Input")
-			return render_template("ioc.html",ioc="Invalid Input",info=[],verdict=[],source="", sandbox="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
+			return render_template("ioc.html",ioc="Invalid Input",info=[],verdict=[],source="", sandbox="",itag="",vtag="",col="text-dark")
 	return render_template("ioc.html",ioc="",info=[],verdict=[],source="", sandbox="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
 
 @dash_bp.route("/cve_hub",methods=['GET', 'POST'])

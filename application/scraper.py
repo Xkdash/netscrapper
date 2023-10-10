@@ -391,6 +391,38 @@ def recordedfuture():
 
 #---------------------------Events--------------------------#
 
+def datediff(date):
+    month=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    temp=date.split(", ")
+    y=temp[1]
+    dend=[]
+    if "-" in temp[0]:
+        t=temp[0].split("-")
+        if len(str(t[1]))<=2:
+            t[1]=t[0][:3]+" "+str(t[1])
+        temp[0]=t[1]
+
+    dend=temp[0].split(" ")
+    dend[0]=dend[0][:3]
+    #print(dend)
+    m=month.index(dend[0])+1
+    if m<=9:
+        m="0"+str(m)
+    d=dend[1]
+
+    if len(d)==1:
+        d="0"+d
+    d1=str(y)+"-"+str(m)+"-"+d
+    d0=str(dt.now()).split(' ')[0]
+    #print(d1,d0)
+    diff=(dt.strptime(d0, "%Y-%m-%d")-dt.strptime(d1, "%Y-%m-%d")).days
+    #print(diff)
+
+    if diff>0:
+        return 0
+    else:
+        return 1
+
 def upcomingevents():
     URL = "https://go.crowdstrike.com/CrowdStrike-Events.html"
     req= Request(URL, headers={'User-Agent': 'Mozilla/5.0'})
@@ -406,7 +438,11 @@ def upcomingevents():
         etype=item.find('div',{'class':'eventWhat'}).text.strip()
         link=item.find('div',{'class':'eventLink'}).find('a')['href'].strip()
         date=item.find('div',{'class':'eventDates'}).text.strip()
-        items.append({"Event":title,"Location":location,"Type":etype,"Link":link,"Dates":date})
+        diff=datediff(date)
+        if date==0:
+            continue
+        elif diff==1:
+            items.append({"Event":title,"Location":location,"Type":etype,"Link":link,"Dates":date})
 
     if items!=None:
 

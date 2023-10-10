@@ -43,6 +43,7 @@ def dash_index():
 		if "source" in list(item.keys()):
 			if item['source'] not in sources:
 				sources.append(item['source'])
+	
 
 	if request.method=="POST":
 		src_select=request.form.get("source_select","")

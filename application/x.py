@@ -48,8 +48,8 @@ def talosintelligence(dlimit=30):
         intel_list.append(idict)
     #json.dump(intel_list,open("talos.json","w"))
     return intel_list
-talos_intel=talosintelligence(90)
-print(talos_intel)
+#talos_intel=talosintelligence(90)
+#print(talos_intel)
 
 def cveSearch(cvename):
     URL = "https://nvd.nist.gov/vuln/detail/"+cvename
@@ -126,3 +126,42 @@ def events():
     json.dump(card_body,open("logs/events.json","w"))
     print(card_body)
 
+def dcheck():
+    month=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    eve=json.load(open("logs/events.json"))
+    events=[]
+    for i in range(len(eve)):
+        item=eve[i]
+        temp=item['Dates'].split(", ")
+        y=temp[1]
+        dend=[]
+        if "-" in temp[0]:
+            t=temp[0].split("-")
+            if len(str(t[1]))<=2:
+                t[1]=t[0][:3]+" "+str(t[1])
+            temp[0]=t[1]
+
+        dend=temp[0].split(" ")
+        dend[0]=dend[0][:3]
+        print(dend)
+        m=month.index(dend[0])+1
+        if m<=9:
+            m="0"+str(m)
+        d=dend[1]
+
+        if len(d)==1:
+            d="0"+d
+        d1=str(y)+"-"+str(m)+"-"+d
+        d0=str(dt.now()).split(' ')[0]
+        print(d1,d0)
+        diff=(dt.strptime(d0, "%Y-%m-%d")-dt.strptime(d1, "%Y-%m-%d")).days
+        print(diff)
+
+        if diff>0:
+            continue
+        else:
+            events.append(item)
+            break
+
+    print(i,eve[i])
+dcheck()

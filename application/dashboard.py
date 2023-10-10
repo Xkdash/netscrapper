@@ -53,6 +53,7 @@ def URLSCANIO_submit(url):
         return response.json()
     else: 
         return -1
+
 def VT_URLverdict(res_dict):
     scans=res_dict["scans"]
     keys=list(scans.keys())
@@ -134,6 +135,7 @@ def URLSCAN_verdict(res_dict):
 		print(uniq, brand, ipinfo)
 		return uniq, brand, ipinfo
 	return "No Result","Unknown",["Unknown"]
+
 def VT_IPfetch(ip):
     api_key="6f182fa8c22759f53b7321acf70ed324685c4e3ecb16db60adb798ac3d02c0ff"
     base_url = "https://www.virustotal.com/vtapi/v2/ip-address/report"

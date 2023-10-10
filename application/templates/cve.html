@@ -17,7 +17,7 @@
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
             <!-- Navbar Brand-->
             <button class="btn btn-link btn-lg order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
-            <a class="navbar-brand ps-3" href="index.html">SOC-Central</a>
+            <a class="navbar-brand ps-3" href="{{url_for('dash_bp.dash_index')}}">SOC-Central</a>
             <!-- Sidebar Toggle-->
             
             <!-- Navbar Search-->
@@ -66,8 +66,9 @@
                         </div>
                     </div>
                     <div class="sb-sidenav-footer">
-                        <div class="small">ver 1.0.</div>
-                        SOC-Central
+                        SOC Central ver 1.0.
+                        <div class="small">Logs Last Updated: </div>
+                        <div class="small">{{time_diff}} ago. </div>
                     </div>
                 </nav>
             </div>

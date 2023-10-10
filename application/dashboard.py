@@ -16,54 +16,22 @@ from bs4 import BeautifulSoup
 import html5lib
 from datetime import datetime as dt
 import urllib.parse
+import os
 
 dash_bp=Blueprint('dash_bp', __name__,template_folder='templates',static_folder='static')
-@dash_bp.route("/",methods=['GET', 'POST'])
-@dash_bp.route("/dashboard",methods=['GET', 'POST'])
-def dash_index():
-	detailed=json.load(open("application/logs/detailed_news.json"))
-	cve_list=json.load(open("application/logs/cve_news.json"))
-	eve=json.load(open("application/logs/events.json"))
-	keywords=json.load(open("application/logs/keywords.json"))
-	sources=["All"]
-	chosen=detailed
-	src_selected=0
-	cve_hits=[]
-	
-	for item in cve_list:
-		if "," in item['cve']:
-			cve_list.remove(item)
-
-	for item in keywords:
-		for c in cve_list:
-			if item in c['vuln_name'].lower() and float(c['cvss']) > 7.0:
-				cve_hits.append({'affected':item, 'cve':c['cve']})
-
-	for item in detailed:
-		if "source" in list(item.keys()):
-			if item['source'] not in sources:
-				sources.append(item['source'])
-	
-
-	if request.method=="POST":
-		src_select=request.form.get("source_select","")
-
-		if src_select!="":
-			if int(src_select)==0:
-				chosen=detailed
-			elif int(src_select)>0 and int(src_select)<=len(detailed)+1:
-				key=sources[int(src_select)]
-				chosen=[]
-				for item in detailed:
-					if item['source']==key:
-						chosen.append(item)
-			src_selected=int(src_select)
-	return render_template("index.html",cve_data=cve_list,detailed=chosen,srcs=sources,src_selected=src_selected,upcoming=eve[0],cve_hits=cve_hits)
 
 def defangURL(url):
     url=url.replace(":","[:]")
     url=url.replace(".","[.]")
     return url
+
+def tcheck():
+    dm=str(datetime.fromtimestamp(int(os.stat("application/logs/events.json").st_mtime)))
+    dn=str(dt.now()).split(".")[0]
+    diff=str(dt.strptime(dn, "%Y-%m-%d %H:%M:%S")-dt.strptime(dm, "%Y-%m-%d %H:%M:%S"))
+    h,m,s=diff.split(":")
+    diff_text=h+ " hours, " +m+ " mins, "+s+" secs"
+    return diff_text
 
 def VT_URLsubmit(url):
     api_key="6f182fa8c22759f53b7321acf70ed324685c4e3ecb16db60adb798ac3d02c0ff"
@@ -281,13 +249,59 @@ def cveSearch(cvename):
     vuln_info={'cve':cvename,'version':cvss_ver,'source':vuln_src, 'published':vuln_pub,'modified':vuln_last, 'description':vuln_desc, 'base_score':cvss_score,'severity':cvss_sev}
     return vuln_info,vectors,hyp
 
+@dash_bp.route("/",methods=['GET', 'POST'])
+@dash_bp.route("/dashboard",methods=['GET', 'POST'])
+def dash_index():
+	detailed=json.load(open("application/logs/detailed_news.json"))
+	cve_list=json.load(open("application/logs/cve_news.json"))
+	eve=json.load(open("application/logs/events.json"))
+	keywords=json.load(open("application/logs/keywords.json"))
+	
+	time_diff=tcheck()
+	sources=["All"]
+	chosen=detailed
+	src_selected=0
+	cve_hits=[]
+	
+	for item in cve_list:
+		if "," in item['cve']:
+			cve_list.remove(item)
+
+	for item in keywords:
+		for c in cve_list:
+			if item in c['vuln_name'].lower() and float(c['cvss']) > 7.0:
+				cve_hits.append({'affected':item, 'cve':c['cve']})
+
+	for item in detailed:
+		if "source" in list(item.keys()):
+			if item['source'] not in sources:
+				sources.append(item['source'])
+	
+
+	if request.method=="POST":
+		src_select=request.form.get("source_select","")
+
+		if src_select!="":
+			if int(src_select)==0:
+				chosen=detailed
+			elif int(src_select)>0 and int(src_select)<=len(detailed)+1:
+				key=sources[int(src_select)]
+				chosen=[]
+				for item in detailed:
+					if item['source']==key:
+						chosen.append(item)
+			src_selected=int(src_select)
+		return render_template("index.html",cve_data=cve_list,detailed=chosen,srcs=sources,src_selected=src_selected,upcoming=eve[0],cve_hits=cve_hits,time_diff=time_diff)
+	return render_template("index.html",cve_data=cve_list,detailed=chosen,srcs=sources,src_selected=src_selected,upcoming=eve[0],cve_hits=cve_hits,time_diff=time_diff)
+
 @dash_bp.route("/ioc_search",methods=['GET', 'POST'])
 def ioc_search():
+	time_diff=tcheck()
 	if request.method=="POST":
 		text=request.form.get("ioc_in","").strip()
 		print(text)
 		if text=="":
-			return render_template("ioc.html",ioc="",info=[],verdict=[],source="", sandbox="",itag="",vtag="",col="text-dark")
+			return render_template("ioc.html",ioc="",info=[],verdict=[],source="", sandbox="",itag="",vtag="",col="text-dark",time_diff=time_diff)
 		elif "."in text:
 			valid=False
 			if "[.]" in text:
@@ -301,7 +315,7 @@ def ioc_search():
 				print("IP4 address")
 				if ipaddress.ip_address(text).is_private:
 					print("Private IP, Can't Check Reputation.")
-					return render_template("ioc.html",ioc="",info=[],sandbox="",verdict=[],source="Private IP, Can't Check Reputation",itag="",vtag="",col="text-dark")
+					return render_template("ioc.html",ioc="",info=[],sandbox="",verdict=[],source="Private IP, Can't Check Reputation",itag="",vtag="",col="text-dark",time_diff=time_diff)
 				else: # valid IP
 					data=AbuseIPDB_ReportsLookup(text)
 					info=["ISP: "+str(data['isp']),"Country: "+ str(data['countryCode']),"Domain: "+str(data['domain'])]
@@ -310,7 +324,7 @@ def ioc_search():
 						col="text-danger"
 					else:
 						col="text-dark"
-					return render_template("ioc.html", ioc="IP: "+text,info=info,sandbox="https://www.abuseipdb.com/check/"+text,sand_text="View in AbuseIPDB",verdict=verdict,source="AbuseIP DB",itag="Info: ",vtag="Verdict: ",col=col)
+					return render_template("ioc.html", ioc="IP: "+text,info=info,sandbox="https://www.abuseipdb.com/check/"+text,sand_text="View in AbuseIPDB",verdict=verdict,source="AbuseIP DB",itag="Info: ",vtag="Verdict: ",col=col,time_diff=time_diff)
 
 			else:
 				if text[:4] !="http":
@@ -340,10 +354,10 @@ def ioc_search():
 					uresults=URLSCAN_fetch(urlscan_res)
 					ver, brand, info = URLSCAN_verdict(uresults)
 					verdict=["VirusTotal Score: "+str(score),"VirusTotal verdict: "+verdict,"VirusTotal Link: "+vtlink,"URLScan.io Verdict: "+ver,"URLScan.io Brand: "+brand]
-					return render_template("ioc.html",ioc="URL: "+ defangURL(url),sandbox=sandbox,sand_text="Run in Proofpoint Sandbox",source="VirusTotal/URLScan.IO",verdict=verdict,itag="Info: ", vtag="Verdict: ", info=info,col=col)
+					return render_template("ioc.html",ioc="URL: "+ defangURL(url),sandbox=sandbox,sand_text="Run in Proofpoint Sandbox",source="VirusTotal/URLScan.IO",verdict=verdict,itag="Info: ", vtag="Verdict: ", info=info,col=col,time_diff=time_diff)
 				else:
 				    print("Invalid IP/URL")
-				    return render_template("ioc.html",ioc="Invalid IP/URL", sandbox="", info=[],verdict=[],source="",itag="",vtag="",col="text-dark")
+				    return render_template("ioc.html",ioc="Invalid IP/URL", sandbox="", info=[],verdict=[],source="",itag="",vtag="",col="text-dark",time_diff=time_diff)
 
 		elif len(text) in [32,40, 64, 128]:
 		    valid=False
@@ -355,15 +369,16 @@ def ioc_search():
 		    if valid==True: #hash
 		        verdict,col,info=VT_hash(text)
 		        print(verdict)
-		        return render_template("ioc.html",ioc="Hash: "+text,verdict=verdict, col=col,source="VirusTotal",itag="Info: ", vtag="Verdict: ", info=info)
+		        return render_template("ioc.html",ioc="Hash: "+text,verdict=verdict, col=col,source="VirusTotal",itag="Info: ", vtag="Verdict: ", info=info,time_diff=time_diff)
 		else:
 			print("Invalid Input")
-			return render_template("ioc.html",ioc="Invalid Input",info=[],verdict=[],source="", sandbox="",itag="",vtag="",col="text-dark")
-	return render_template("ioc.html",ioc="",info=[],verdict=[],source="", sandbox="",v_n=0,i_n=0,itag="",vtag="",col="text-dark")
+			return render_template("ioc.html",ioc="Invalid Input",info=[],verdict=[],source="", sandbox="",itag="",vtag="",col="text-dark",time_diff=time_diff)
+	return render_template("ioc.html",ioc="",info=[],verdict=[],source="", sandbox="",itag="",vtag="",col="text-dark",time_diff=time_diff)
 
 @dash_bp.route("/cve_hub",methods=['GET', 'POST'])
 def cve_hub():
 	logs=json.load(open("application/logs/cve_news.json"))
+	time_diff=tcheck()
 	for item in logs:
 		if "," in item['cve']:
 			logs.remove(item)
@@ -371,11 +386,11 @@ def cve_hub():
 	if request.method=="POST":
 		text=request.form.get("cve_in","").strip()
 		if text=="":
-			return render_template("cve.html",data=logs,total=len(logs),info="")
+			return render_template("cve.html",data=logs,total=len(logs),info="",time_diff=time_diff)
 		else:
 			check=requests.get(base_url+text)
 			if check.status_code != 200: #webpage doesn't exist or be loaded
-				return render_template("cve.html",data=logs,total=len(logs),info="Webpage doesn't exist or can't be loaded")
+				return render_template("cve.html",data=logs,total=len(logs),info="Webpage doesn't exist or can't be loaded",time_diff=time_diff)
 			else:
 				cve_info,att_info,res=cveSearch(text)
 				info_keys=list(cve_info.keys())
@@ -384,14 +399,15 @@ def cve_hub():
 					k=list(att_info[i].keys())
 					vec[k[0]]=att_info[i][k[0]]
 				att_keys=list(vec.keys())
-				return render_template("cve.html",data=logs,total=len(logs),info_keys=info_keys,cve_info=cve_info,att_keys=att_keys,att_info=vec,info="CVE INFO:",res=res)
+				return render_template("cve.html",data=logs,total=len(logs),info_keys=info_keys,cve_info=cve_info,att_keys=att_keys,att_info=vec,info="CVE INFO:",res=res,time_diff=time_diff)
 
-	return render_template("cve.html",data=logs,total=len(logs),info="")
+	return render_template("cve.html",data=logs,total=len(logs),info="",time_diff=time_diff)
 
 @dash_bp.route("/threat_hub",methods=['GET', 'POST'])
 def threat_hub():
 	detailed=json.load(open("application/logs/detailed_news.json"))
 	headlines=json.load(open("application/logs/headlines.json"))
+	time_diff=tcheck()
 	sources=["All"]
 	chosen=detailed
 	src_selected=0
@@ -412,10 +428,11 @@ def threat_hub():
 					if item['source']==key:
 						chosen.append(item)
 			src_selected=int(src_select)
-	return render_template("threat.html",headlines=headlines,detailed=chosen,srcs=sources,src_selected=src_selected)
+	return render_template("threat.html",headlines=headlines,detailed=chosen,srcs=sources,src_selected=src_selected,time_diff=time_diff)
 
 
 @dash_bp.route("/events",methods=['GET', 'POST'])
 def events():
+	time_diff=tcheck()
 	logs=json.load(open("application/logs/events.json"))
-	return render_template("events.html",events=logs)
+	return render_template("events.html",events=logs,time_diff=time_diff)

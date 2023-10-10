@@ -5,6 +5,8 @@ import html5lib
 from datetime import datetime as dt
 import json
 import re
+import os
+from datetime import datetime, timedelta
 
 def parseTalosVuln(item):
     text=item.replace("  ","")
@@ -164,4 +166,13 @@ def dcheck():
             break
 
     print(i,eve[i])
-dcheck()
+#dcheck()
+
+def tcheck():
+    dm=str(datetime.fromtimestamp(int(os.stat("logs/events.json").st_mtime)))
+    dn=str(dt.now()).split(".")[0]
+    diff=str(dt.strptime(dn, "%Y-%m-%d %H:%M:%S")-dt.strptime(dm, "%Y-%m-%d %H:%M:%S"))
+    h,m,s=diff.split(":")
+    diff_text=h+ " hours, " +m+ " mins, "+s+" secs"
+    return diff_text
+tcheck()

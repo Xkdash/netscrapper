@@ -430,7 +430,6 @@ def threat_hub():
 			src_selected=int(src_select)
 	return render_template("threat.html",headlines=headlines,detailed=chosen,srcs=sources,src_selected=src_selected,time_diff=time_diff)
 
-
 @dash_bp.route("/events",methods=['GET', 'POST'])
 def events():
 	time_diff=tcheck()

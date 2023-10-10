@@ -53,6 +53,7 @@ def URLSCANIO_submit(url):
         return response.json()
     else: 
         return -1
+
 def VT_URLverdict(res_dict):
     scans=res_dict["scans"]
     keys=list(scans.keys())
@@ -134,6 +135,7 @@ def URLSCAN_verdict(res_dict):
 		print(uniq, brand, ipinfo)
 		return uniq, brand, ipinfo
 	return "No Result","Unknown",["Unknown"]
+
 def VT_IPfetch(ip):
     api_key="6f182fa8c22759f53b7321acf70ed324685c4e3ecb16db60adb798ac3d02c0ff"
     base_url = "https://www.virustotal.com/vtapi/v2/ip-address/report"
@@ -155,6 +157,7 @@ def AbuseIPDB_ReportsLookup(ip):
 		    return data['data']
 		else:
 		    return -1
+
 def VT_hash(text):
     warnings.filterwarnings('ignore')
     url = "https://www.virustotal.com/api/v3/files/"+text
@@ -188,11 +191,6 @@ def VT_hash(text):
             return ["Malicious Score: ("+str(mal)+"/"+str(mal+und)+")"],"text-danger",info
     else:
         return ["No Results Found"], "text-primary",info
-
-def URLSCAN_screenshot(uuid):
-    url="https://urlscan.io/screenshots/"
-    snap=Image.open(requests.get(url+uuid+".png", stream=True, verify=False).raw)
-    return snap
 
 def cveSearch(cvename):
     URL = "https://nvd.nist.gov/vuln/detail/"+cvename
@@ -248,6 +246,11 @@ def cveSearch(cvename):
     #print(vuln_pub,vuln_last,vuln_src)
     vuln_info={'cve':cvename,'version':cvss_ver,'source':vuln_src, 'published':vuln_pub,'modified':vuln_last, 'description':vuln_desc, 'base_score':cvss_score,'severity':cvss_sev}
     return vuln_info,vectors,hyp
+
+def URLSCAN_screenshot(uuid):
+    url="https://urlscan.io/screenshots/"
+    snap=Image.open(requests.get(url+uuid+".png", stream=True, verify=False).raw)
+    return snap
 
 @dash_bp.route("/",methods=['GET', 'POST'])
 @dash_bp.route("/dashboard",methods=['GET', 'POST'])

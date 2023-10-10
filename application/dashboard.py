@@ -157,6 +157,7 @@ def AbuseIPDB_ReportsLookup(ip):
 		    return data['data']
 		else:
 		    return -1
+
 def VT_hash(text):
     warnings.filterwarnings('ignore')
     url = "https://www.virustotal.com/api/v3/files/"+text
@@ -190,11 +191,6 @@ def VT_hash(text):
             return ["Malicious Score: ("+str(mal)+"/"+str(mal+und)+")"],"text-danger",info
     else:
         return ["No Results Found"], "text-primary",info
-
-def URLSCAN_screenshot(uuid):
-    url="https://urlscan.io/screenshots/"
-    snap=Image.open(requests.get(url+uuid+".png", stream=True, verify=False).raw)
-    return snap
 
 def cveSearch(cvename):
     URL = "https://nvd.nist.gov/vuln/detail/"+cvename
@@ -250,6 +246,11 @@ def cveSearch(cvename):
     #print(vuln_pub,vuln_last,vuln_src)
     vuln_info={'cve':cvename,'version':cvss_ver,'source':vuln_src, 'published':vuln_pub,'modified':vuln_last, 'description':vuln_desc, 'base_score':cvss_score,'severity':cvss_sev}
     return vuln_info,vectors,hyp
+
+def URLSCAN_screenshot(uuid):
+    url="https://urlscan.io/screenshots/"
+    snap=Image.open(requests.get(url+uuid+".png", stream=True, verify=False).raw)
+    return snap
 
 @dash_bp.route("/",methods=['GET', 'POST'])
 @dash_bp.route("/dashboard",methods=['GET', 'POST'])

@@ -550,8 +550,8 @@ def aggregate():
     #---------------------------------------------------
     try:
         rf=recordedfuture()
-    except:
-        print('RecordedFuture Module is Crashing')
+    except Exception as e:
+        print('RecordedFuture Module is Crashing',e)
     else:
         if rf!=None:
             for item in rf:
